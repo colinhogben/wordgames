@@ -16,6 +16,7 @@ int match_min=0;
 int match_max=0;
 int numstar=0;
 
+#if 0
 static void dump_match(void)
 {
   int i,j,code;
@@ -34,6 +35,7 @@ static void dump_match(void)
     printf("\n");
   }
 }
+#endif
 
 /*--------------------------------------------------------------*
  *	Compile a match pattern					*
