@@ -235,11 +235,14 @@ static int Dict_freer(void *vdict, size_t size)
 Dict Dict_open(const char *dir)
 {
   int i;
-  const char *envdir;
   Dict d = NEW(struct _Dict);
-  d->dir = Mem_strdup(dir ? dir:
-		      (envdir = getenv("D2DICT")) != NULL ? envdir:
-		      (const char *)DEFAULT_DIR); /* copy file stub */
+  if (dir == NULL) {
+    dir = getenv("D2DICT");
+    if (dir == NULL) {
+      dir = DEFAULT_DIR;
+    }
+  }
+  d->dir = Mem_strdup(dir);
   for (i=0; i<=MAXLEN; i++) {
     d->dictl[i] = NULL;			/* no Dictl objects yet */
     d->used[i] = 0;			/* so not used */
@@ -254,7 +257,6 @@ Dict Dict_open(const char *dir)
 void Dict_close(Dict d)
 {
   int i;
-  static void Dictl_delete(Dictl dl);
 
   Mem_remove_freer(Dict_freer, d);
   for (i=0; i<=MAXLEN; i++) {		/* remove all Dictls */
