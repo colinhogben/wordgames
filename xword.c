@@ -1,5 +1,9 @@
 /*--------------------------------------------------------------*
  *	Find words of the form <arg><word>			*
+ *	$ xword fr 8
+ *	FRACTION
+ *	...
+ *	FROWNING
  *--------------------------------------------------------------*/
 #include "d2.h"
 #include <stdio.h>
@@ -27,12 +31,12 @@ int main(int argc, char *argv[])
   }
   if (argc == 3) {
     minlen = maxlen = atoi(argv[2]);
-    if (minlen < hlen+1 || minlen > MAXLEN) {
+    if (minlen < hlen+2 || minlen > MAXLEN) {
       fprintf(stderr, "Invalid length %d\n", minlen);
       exit(1);
     }
   } else {
-    minlen = hlen-1;
+    minlen = hlen+2;
     maxlen = MAXLEN;
   }
   if (minlen < 2) minlen = 2;
