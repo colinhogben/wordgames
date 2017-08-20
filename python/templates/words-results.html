@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Words</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <link rel="stylesheet" href="/newjs/jquery-mobile/jquery.mobile.css" />
+    <script src="/stdjs/jquery/jquery.min.js"></script>
+    <script src="/newjs/jquery-mobile/jquery.mobile.js"></script>
+  </head>
+  <body>
+    <div id="results" data-role="page" data-title="Results | Words">
+      <div data-role="header">
+	<h1>Words: {{pattern}}</h1>
+      </div>
+      <div data-role="content">
+	{% if not results %}
+	<p>No matches</p>
+	{% else %}
+	<ul data-role="listview">
+	  {% for word in results %}
+	  <li>{{word}}</li>
+	  {% endfor %}
+	</ul>
+	{% endif %}
+      </div>
+    </div>
+  </body>
+</html>

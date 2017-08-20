@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Words</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <script src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.css" />
+  </head>
+  <body>
+    <div data-role="page" data-theme="a">
+      <div data-role="header">
+	<h1>Words</h1>
+      </div>
+      <div id="main" data-role="content">
+	<form action="#results">
+	  <label for="f-pattern">Pattern</label>
+	  <input id="f-pattern" type="search" name="pattern" value="{{pattern}}" data-clear-btn="true" />
+	  <fieldset data-role="controlgroup" data-type="horizontal">
+	    <legend>Length:</legend>
+	    <label for="f-len-any">Any</label>
+	    <input id="f-len-any" type="radio" name="len" value="" />
+	    {% for n in range(5,12+1) %}
+	    <label for="f-len-{{n}}">{{n}}</label>
+	    <input id="f-len-{{n}}" type="radio" name="len" value="{{n}}" />
+	    {% endfor %}
+	  </fieldset>
+	  <fieldset data-role="controlgroup" data-type="horizontal">
+	    <legend>Action:</legend>
+	    <button type="submit" name="action" value="dmatch">Match</button>
+	    <button type="submit" name="action" value="anag">Anagram</button>
+	    <button type="submit" name="action" value="target">Target</button>
+	  </fieldset>
+	</form>
+	{% if False %}
+	<ul data-role="listview" data-inset="true" data-filter="true">
+	  <li><a href="#results">Pither</a></li>
+	  <li><a href="#">Putey</a></li>
+	  <li><a href="#">Pepperpot</a></li>
+	  <li><a href="#">Mystico</a></li>
+	</ul>
+	{% endif %}
+      </div>
+      <div data-role="footer">
+	<p style="font-size:small">&copy; Python Technology Ltd</p>
+      </div>
+    </div>
+  </body>
+</html>

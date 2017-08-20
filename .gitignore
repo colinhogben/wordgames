@@ -16,6 +16,9 @@
 *.out
 *.app
 
+# Python
+*.pyc
+
 anag
 boggle
 caesar
