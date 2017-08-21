@@ -1,4 +1,8 @@
 #!/usr/bin/python
+#=======================================================================
+# Example script to run wordsapp web application either as a CGI script
+# or as a stand-alone server
+#=======================================================================
 import os
 import sys
 sys.path.append(os.path.expanduser('~/wordgames/python'))
@@ -6,6 +10,9 @@ from wsgiref.handlers import CGIHandler
 
 os.environ['D2DICT'] = os.path.expanduser('~/.local/share/moby')
 os.environ['WORDSBIN'] = os.path.expanduser('~/wordgames')
+#os.environ['WORDSLINK'] = 'http://www.dictionary.com/browse/{}'
+#os.environ['WORDSLINK'] = 'https://www.onelook.com?w={}'
+os.environ['WORDSLINK'] = 'https://www.oxforddictionaries.com/definition/{}'
 
 from wordsapp import app
 
@@ -13,6 +20,4 @@ if 'GATEWAY_INTERFACE' in os.environ:
     from wsgiref.handlers import CGIHandler
     CGIHandler().run(app)
 else:
-    app.run(host='0.0.0.0', port=8080, threaded=True,
-            debug=True)
-#CGIHandler().run(app)
+    app.run(host='0.0.0.0', port=8080)

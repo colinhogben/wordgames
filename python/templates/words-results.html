@@ -17,8 +17,14 @@
 	<p>No matches</p>
 	{% else %}
 	<ul data-role="listview">
-	  {% for word in results %}
-	  <li>{{word}}</li>
+	  {% for word,link in results %}
+	  <li>
+	    {% if link %}
+	    <a href="{{link}}">{{word}}</a>
+	    {% else %}
+	    {{word}}
+	    {% endif %}
+	  </li>
 	  {% endfor %}
 	</ul>
 	{% endif %}
