@@ -3,7 +3,6 @@ import os
 import sys
 sys.path.append(os.path.expanduser('~/wordgames/python'))
 from wsgiref.handlers import CGIHandler
-#from words import Words
 
 os.environ['D2DICT'] = os.path.expanduser('~/.local/share/moby')
 os.environ['WORDSBIN'] = os.path.expanduser('~/wordgames')
@@ -11,7 +10,7 @@ os.environ['WORDSBIN'] = os.path.expanduser('~/wordgames')
 from wordsapp import app
 
 if 'GATEWAY_INTERFACE' in os.environ:
-    from wsgirefhandlers import CGIHandler
+    from wsgiref.handlers import CGIHandler
     CGIHandler().run(app)
 else:
     app.run(host='0.0.0.0', port=8080, threaded=True,
