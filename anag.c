@@ -13,13 +13,10 @@ int main(int argc,
   Dict d = Dict_open(NULL);
   const char *word;
   int i,clen,len,c;
-  struct {char nlet[26], nwild;} pool, wpool;
+  Dpool pool, wpool;
   Dscan ds;
 
-  for (i=0; i<26; i++) {
-    pool.nlet[i] = 0;
-  }
-  pool.nwild = 0;
+  dpool_clear(&pool);
 
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s chars [length]\n", argv[0]);
@@ -29,9 +26,9 @@ int main(int argc,
   for (i=0; i<clen; i++) {
     char c = argv[1][i];
     if (isalpha(c)) {
-      pool.nlet[toupper(c)-'A']++;
+      dpool_add_char(&pool, c);
     }else if (c=='#' || c=='.') {
-      pool.nwild++;
+      dpool_add_wild(&pool);
     }else{
       fprintf(stderr, "Bad character\n");
       exit(1);
@@ -53,11 +50,7 @@ int main(int argc,
     wpool = pool;
     for (i=0; i<len; i++) {
       c = word[i];
-      if (wpool.nlet[c-'A'] > 0) {
-        wpool.nlet[c-'A']--;
-      }else if (wpool.nwild > 0) {
-      	wpool.nwild--;
-      }else{
+      if (dpool_sub_char(&wpool, c) < 0) {
       	ok = 0;
       	Dscan_skip(ds, i);
       	break;
@@ -66,15 +59,9 @@ int main(int argc,
     if (ok) {
       printf("%s", word);
       if (len < clen) {
-	printf(" ");
-	for (c='A'; c<='Z'; c++) {
-	  for (i=0; i<wpool.nlet[c-'A']; i++) {
-	    printf("%c", c);
-	  }
-	}
-	for (i=0; i<wpool.nwild; i++) {
-	  printf(".");
-	}
+	char rest[MAXLEN];
+	dpool_string(rest, &wpool, '.');
+	printf(" %s", rest);
       }
       printf("\n");
     }

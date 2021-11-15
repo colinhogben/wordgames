@@ -26,11 +26,15 @@ extern const char *Dscan_read(Dscan ds);
 extern void Dscan_skip(Dscan ds, int skip);
 extern void Dscan_close(Dscan ds);
 
-typedef struct _Dpool Dpool;
+typedef struct {
+  unsigned char nlet[26];
+  unsigned char nwild;
+} Dpool;
 
 #define dpool_clear(pp) memset(pp,0,sizeof(Dpool))
 extern void dpool_add(Dpool *, const Dpool *);
 #define dpool_add_char(pp,c) (isalpha(c) ? (pp)->nlet[toupper(c)-'A']++ : (pp)->nwild++)
+#define dpool_add_wild(pp) ((pp)->nwild++)
 extern void dpool_add_word(Dpool *, const char *);
 extern int dpool_sub(Dpool *, const Dpool *);
 extern int dpool_sub_char(Dpool *, int);
