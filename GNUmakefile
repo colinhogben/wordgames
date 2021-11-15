@@ -8,7 +8,7 @@ APPS   = anag boggle caesar d2test dcomp dmatch evens countdown \
         find1 find2 find3 \
 	monotone palin palinx qback reverse rotate scrab \
 	subst subtract useonly wordx woxrd xpalin xrev xword \
-	fitx jumble1 wordsquare target
+	fitx jumble1 wordsquare target useall
 
 BINAPPS := $(addprefix $(BINDIR)/,$(APPS))
 all:	$(BINAPPS)
