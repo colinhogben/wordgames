@@ -1,11 +1,13 @@
 /*======================================================================
  *	Implementation of d2 dictionary
  *======================================================================*/
+#define _GNU_SOURCE			/* For asprintf */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/stat.h>
 #include "mem.h"
 #include "d2.h"
 #include "d2file.h"			/* definition of file layout */
@@ -229,6 +231,27 @@ static int Dict_freer(void *vdict, size_t size)
   return 0;
 }
 
+static char *
+_dict_default_dir(void)
+{
+  char *dir;
+  struct stat st;
+  const char *home = getenv("HOME");
+  if (home != NULL) {
+    asprintf(&dir, "%s/.local/share/d2dict", home);
+    if (stat(dir, &st) == 0 &&
+	(st.st_mode & S_IFMT) == S_IFDIR) {
+      return dir;
+    }
+  }
+  if (stat(DEFAULT_DIR, &st) == 0 &&
+      (st.st_mode & S_IFMT) == S_IFDIR) {
+    return strdup(DEFAULT_DIR);
+  }
+  fail("No directory $HOME/.local/share/d2dict or %s", DEFAULT_DIR);
+  return 0;
+}
+
 /*----------------------------------------------------------------------
  *	Create a dictionary from a given file stub (NULL => default)
  *----------------------------------------------------------------------*/
@@ -238,11 +261,12 @@ Dict Dict_open(const char *dir)
   Dict d = NEW(struct _Dict);
   if (dir == NULL) {
     dir = getenv("D2DICT");
-    if (dir == NULL) {
-      dir = DEFAULT_DIR;
-    }
   }
-  d->dir = Mem_strdup(dir);
+  if (dir == NULL) {
+    d->dir = _dict_default_dir();
+  } else {
+    d->dir = Mem_strdup(dir);
+  }
   for (i=0; i<=MAXLEN; i++) {
     d->dictl[i] = NULL;			/* no Dictl objects yet */
     d->used[i] = 0;			/* so not used */
