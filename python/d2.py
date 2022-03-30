@@ -30,7 +30,7 @@ class Dict:
     def __contains__(self, word):
         try:
             dl = self.dictl(len(word))
-            return (word in dl)
+            return (word.upper() in dl)
         except KeyError:
             return False
 
@@ -191,18 +191,34 @@ def bsearch(lst, item):
     return None
 
 if __name__=='__main__':
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser()
+    sub = ap.add_subparsers(dest='method', metavar='method')
+    #
+    m_isword = sub.add_parser('is-word',
+                              help='Check if a word is in the dictionary')
+    m_isword.add_argument('word',
+                          help='Word to check')
+    #
+    m_dump = sub.add_parser('dumpl',
+			    help='Dump words for given length')
+    m_dump.add_argument('length', type=int,
+                        help='Word length')
+    #
+    args = ap.parse_args()
     dictdir = os.path.expanduser('~/.local/share/moby')
-    p = Dpool()
-    p.add_word('ab??zya')
-    print(p.as_string())
     d2 = Dict(dictdir)
-    dl = d2.dictl(7)
-    for word in ('', 'A', 'TEST', 'SHSHFSH', 'TESTING'):
-        print(word, word in dl, word in d2)
-    #dl.dump()
-    scan = Dscan(d2, 7)
-    while True:
-        try:
-            print(scan.read())
-        except EOFError:
-            break
+    method = args.method
+    if method is None:          # PY3 bug
+        ap.error('No method')
+    elif method == 'is-word':
+        if args.word not in d2:
+            print('"%s" is not in the dictionary' % args.word,
+                  file=sys.stderr)
+            sys.exit(1)
+    elif method == 'dumpl':
+        dl = d2.dictl(args.length)
+        dl.dump()
+    else:
+        raise NotImplementedError(method)
