@@ -34,6 +34,16 @@ class Dict:
         except KeyError:
             return False
 
+    def anagram(self, letters):
+        """Iterate over anagrams"""
+        length = len(letters)
+        pool = Dpool()
+        pool.add_word(letters)
+        for word in self.dictl(length):
+            poolx = pool.clone()
+            if poolx.sub_word(word):
+                yield word
+
 class Dictl:
     """Sub-dictionary for a particular length"""
     def __init__(self, length):
@@ -232,6 +242,11 @@ if __name__=='__main__':
     m_dump.add_argument('length', type=int,
                         help='Word length')
     #
+    m_anag = sub.add_parser('anag',
+                            help='Find anagrams')
+    m_anag.add_argument('word',
+                        help='Word, maybe including wildcards')
+    #
     args = ap.parse_args()
     dictdir = os.path.expanduser('~/.local/share/moby')
     d2 = Dict(dictdir)
@@ -247,6 +262,9 @@ if __name__=='__main__':
         dl = d2.dictl(args.length)
         #dl.dump()
         for word in dl:
+            print(word)
+    elif method == 'anag':
+        for word in d2.anagram(args.word):
             print(word)
     else:
         raise NotImplementedError(method)
