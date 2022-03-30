@@ -168,16 +168,14 @@ class Dpool:
         return True
 
     def sub_char(self, ch):
-        try:
-            ix = self._index(ch[:1])
-            if self.nlet[ix] == 0:
-                return False
+        ix = self._index(ch[:1])
+        if self.nlet[ix] > 0:
             self.nlet[ix] -= 1
-        except NotAlpha:
-            if self.nwild == 0:
-                return False
+            return True
+        elif self.nwild > 0:
             self.nwild -= 1
-        return True
+            return True
+        return False
 
     def as_string(self, wildch='.'):
         s = ''
