@@ -80,10 +80,13 @@ class Dictl:
             return False
         return True
 
+    def __iter__(self):
+        return Dscan(self)
+
 class Dscan:
     """Iterate over words"""
-    def __init__(self, d2, length):
-        self.dl = d2.dictl(length)
+    def __init__(self, dictl):
+        self.dl = dictl
         # Indexes
         self.hix = 0
         self.tix = 0
@@ -109,11 +112,30 @@ class Dscan:
     def skip(self, skip):
         raise NotImplementedError
 
+    def __next__(self):
+        """Can use as an iterator"""
+        try:
+            word = self.read()
+        except EOFError:
+            raise StopIteration
+        else:
+            return word
+    next = __next__             # PY2
+
 class Dpool:
     """Pool of letters"""
     def __init__(self):
         self.nlet = [0] * 26
         self.nwild = 0
+
+    def __repr__(self):
+        return '<Dpool "%s">' % self.as_string()
+
+    def __len__(self):
+        n = self.nwild
+        for i in self.nlet:
+            n += i
+        return n
 
     def clone(self):
         new = self.__class__()
@@ -166,9 +188,15 @@ class Dpool:
         return s
 
     def _index(self, ch):
-        if not ch.isalpha():
+        ich = ord(ch.upper()) - ord('A')
+        if not 0 <= ich < 26:
             raise NotAlpha
-        return ord(ch.upper()) - ord('A')
+        return ich
+
+def iter_chars(word):
+    """Iterate over characters in a word (PY2/3 compatible)"""
+    for i in range(len(word)):
+        yield word[i:i+1]
 
 def btoa(b):
     return str(b.decode('ascii'))
@@ -219,6 +247,8 @@ if __name__=='__main__':
             sys.exit(1)
     elif method == 'dumpl':
         dl = d2.dictl(args.length)
-        dl.dump()
+        #dl.dump()
+        for word in dl:
+            print(word)
     else:
         raise NotImplementedError(method)
