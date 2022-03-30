@@ -4,7 +4,6 @@ Native implementation of D2 words
 """
 #=======================================================================
 from __future__ import print_function
-from collections import OrderedDict
 import os
 import struct
 
@@ -49,55 +48,58 @@ class Dictl:
                 raise ValueError('%s: Length %d, expected %d' %
                                  (filename, wlen, self.length))
             self.nhead = nhead
-            ht = []
+            self.heads = []
+            tends = []
             for i in range(nhead):
                 b2, tend = struct.unpack('<2s 2x I', f.read(8))
                 h2 = btoa(b2)
                 if not h2.isalpha():
                     raise ValueError('%s: Non-alpha head %r' %
                                      (filename, h2))
-                ht.append((h2, tend))
-            self.sect = OrderedDict()
+                self.heads.append(h2)
+                tends.append(tend)
+            self.tails = []
             sofar = 0
-            for h2, tend in ht:
+            for tend in tends:
                 tails = [btoa(f.read(self.length - 2))
                          for i in range(tend - sofar)]
                 sofar = tend
-                self.sect[h2] = tails
+                self.tails.append(tails)
 
     def dump(self):
-        for h2, tails in self.sect.items():
+        for h2, tails in zip(self.heads, self.tails):
             for tail in tails:
                 print(h2 + tail)
 
     def __contains__(self, word):
-        try:
-            tails = self.sect[word[:2]]
-            # FIXME binary search
-            return bsearch(tails, word[2:]) is not None
-            #return (word[2:] in tails)
-        except KeyError:
+        hix = bsearch(self.heads, word[:2])
+        if hix is None:
             return False
+        tix = bsearch(self.tails[hix], word[2:])
+        if tix is None:
+            return False
+        return True
 
 class Dscan:
     """Iterate over words"""
     def __init__(self, d2, length):
         self.dl = d2.dictl(length)
-        self.heads = self.dl.sect.keys()
-        self.tails = None
         # Indexes
         self.hix = 0
+        self.tix = 0
+        self.heads = self.dl.heads
+        self.tails = None
         self._get_sect()
 
     def _get_sect(self):
-        self.head = self.heads[self.hix]
-        self.tails = self.dl.sect[self.head]
+        self.head = self.dl.heads[self.hix]
+        self.tails = self.dl.tails[self.hix]
         self.tix = 0
 
     def read(self):
         if self.tix >= len(self.tails):
             self.hix += 1
-            if self.hix >= len(self.heads):
+            if self.hix >= len(self.dl.heads):
                 raise EOFError
             self._get_sect()
         word = self.head + self.tails[self.tix]
