@@ -34,11 +34,12 @@ class Dict:
         except KeyError:
             return False
 
-    def anagram(self, letters):
+    def anagram(self, letters, length=None):
         """Iterate over anagrams"""
-        length = len(letters)
+        if length is None:
+            length = len(letters)
         pool = Dpool()
-        pool.add_word(letters)
+        pool.add_pattern(letters)
         for word in self.dictl(length):
             poolx = pool.clone()
             if poolx.sub_word(word):
@@ -158,6 +159,13 @@ class Dpool:
             self.nlet[i] += n
         self.nwild += other.nwild
 
+    def add_pattern(self, pat, wild='.?'):
+        for i in range(len(pat)):
+            if pat[i:i+1] in wild:
+                self.add_wild()
+            else:
+                self.add_char(pat[i:i+1])
+
     def add_word(self, word):
         for i in range(len(word)):
             self.add_char(word[i:i+1])
@@ -244,6 +252,8 @@ if __name__=='__main__':
     #
     m_anag = sub.add_parser('anag',
                             help='Find anagrams')
+    m_anag.add_argument('-l','--length', type=int,
+                        help='Length (if not using all letters)')
     m_anag.add_argument('word',
                         help='Word, maybe including wildcards')
     #
@@ -264,7 +274,7 @@ if __name__=='__main__':
         for word in dl:
             print(word)
     elif method == 'anag':
-        for word in d2.anagram(args.word):
+        for word in d2.anagram(args.word, length=args.length):
             print(word)
     else:
         raise NotImplementedError(method)
