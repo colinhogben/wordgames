@@ -13,11 +13,14 @@ APPS   = anag boggle caesar d2test dcomp dmatch evens countdown \
 BINAPPS := $(addprefix $(BINDIR)/,$(APPS))
 all:	$(BINAPPS)
 
-clean:
+clean:	FORCE
 	$(dolines app,$(APPS),rm $(app).o)
 
-veryclean:	clean
+veryclean0:	clean	FORCE
 	$(dolines app,$(APPS),rm $(BINDIR)/$(app))
+
+veryclean:	FORCE
+	rm -f $(BINAPPS)
 
 dmatch_LIBS = match.o
 $(BINDIR)/dmatch: match.o
@@ -29,7 +32,7 @@ $(BINAPPS):	$(BINDIR)/%:	%.o d2.o mem.o
 $(addsuffix .o,$(APPS)):	%.o:	%.c
 	$(CC) -c -o $@ $(CFLAGS) $<
 
-d2make: d2make.c d2write.c msort.o
+d2make: d2make.c d2write.c msort.o mem.o
 
 #--
 palind : palind.o
@@ -64,3 +67,5 @@ elim : c.elim
 
 ws5.c:	gen_ws
 	gen_ws 5 > $@
+
+.PHONY:	FORCE

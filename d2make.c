@@ -60,8 +60,10 @@ int main(int argc, char *argv[])
   }
 
   Dictw_write(dw, argv[3]);
+#ifdef __riscos
   sprintf(line, "SetType %s D2dict", argv[3]);
   system(line);
+#endif
 
   return 0; 
 }

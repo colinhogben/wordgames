@@ -19,6 +19,7 @@
 # Python
 *.pyc
 
+d2make
 anag
 boggle
 caesar
