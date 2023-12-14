@@ -3,7 +3,7 @@
 Native implementation of D2 words
 """
 #=======================================================================
-from __future__ import print_function
+from functools import cache
 import os
 import struct
 
@@ -14,18 +14,39 @@ class Dict:
     """Wrapper for whole dictionary"""
     def __init__(self, stub):
         self.stub = stub
-        self.by_len = {}
 
+    @cache
     def dictl(self, length):
-        try:
-            dl = self.by_len[length]
-        except KeyError:
-            filename = os.path.join(self.stub, '%02d' % length)
-            if not os.path.exists(filename):
-                raise KeyError('No words of length %d' % length)
-            dl = self.by_len[length] = Dictl(length)
-            dl.load(filename)
+        filename = self.resource_filename('%02d' % length)
+        if not os.path.exists(filename):
+            raise KeyError('No words of length %d' % length)
+        dl = Dictl(length)
+        dl.load(filename)
         return dl
+
+    @cache
+    def anagram_map(self, length):
+        """Get map from pool to anagrams"""
+        anagfile = self.resource_filename('anag%02d' % length)
+        if os.path.exists(anagfile):
+            amap = read_wdict(anagfile)
+        else:
+            amap = {}
+            for word in self.dictl(length):
+                sword = ''.join(sorted(word))
+                try:
+                    wlist = amap[sword]
+                except KeyError:
+                    wlist = amap[sword] = []
+                wlist.append(word)
+            for wlist in amap.values():
+                wlist.sort()
+            # Cache the map on disk
+            try:
+                write_wdict(amap, anagfile, length)
+            except Exception:
+                pass
+        return amap
 
     def __contains__(self, word):
         try:
@@ -33,6 +54,9 @@ class Dict:
             return (word.upper() in dl)
         except KeyError:
             return False
+
+    def resource_filename(self, relname):
+        return os.path.join(self.stub, relname)
 
     def anagram(self, letters, length=None):
         """Iterate over anagrams"""
@@ -233,6 +257,46 @@ def bsearch(lst, item):
         else:
             can = mid+1
     return None
+
+def write_wdict(wdict, filename, wlen=None):
+    """Write {pool: [word]} to file"""
+    if wlen is None:
+        wlen = len(next(iter(wdict)))
+
+    def i4(n):
+        return struct.pack('<I', n)
+
+    with open(filename, 'wb') as f:
+        f.write(b'd2w' + struct.pack('<B', wlen))
+        f.write(i4(len(wdict)))
+        sofar = 0
+        for pool, words in sorted(wdict.items()):
+            f.write(pool.encode('ascii'))
+            sofar += len(words)
+            f.write(i4(sofar))
+        for pool, words in sorted(wdict.items()):
+            f.write(''.join(w for w in sorted(words)).encode('ascii'))
+
+def read_wdict(filename):
+    """Read dict"""
+    def i4(f):
+        return struct.unpack('<I', f.read(4))[0]
+
+    with open(filename, 'rb') as f:
+        magic, wlen = f.read(3), struct.unpack('<B', f.read(1))[0]
+        assert magic == b'd2w'
+        npools = i4(f)
+        pools = []
+        for i in range(npools):
+            pools.append((f.read(wlen).decode('ascii'), i4(f)))
+        wdict = {}
+        sofar = 0
+        for pool, tailend in pools:
+            ntail = tailend - sofar
+            words = f.read(ntail * wlen).decode('ascii')
+            wdict[pool] = [words[i*wlen:(i+1)*wlen] for i in range(ntail)]
+            sofar = tailend
+    return wdict
 
 if __name__=='__main__':
     import argparse
