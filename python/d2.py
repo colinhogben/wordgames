@@ -3,6 +3,7 @@
 Native implementation of D2 words
 """
 #=======================================================================
+from collections import Counter
 from functools import cache
 import os
 import struct
@@ -47,6 +48,40 @@ class Dict:
             except Exception:
                 pass
         return amap
+
+    @cache
+    def aneighbour_map(self, length):
+        """Get map from sorted chars to neighbours"""
+        filename = self.resource_filename('aneigh%02d' % length)
+        if os.path.exists(filename):
+            nmap = read_wdict(filename)
+        else:
+            amap = self.anagram_map(length)
+            nmap = {}
+            A_Z = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            for i, pool in enumerate(amap):
+                if i % 500 == 0:
+                    print('neighbours...', i, pool)
+                nlist = []
+                bag = Counter(pool)
+                for c in A_Z:               # Char to change to
+                    for a in bag:           # Char to swap out
+                        if c == a:
+                            continue
+                        nbag = bag.copy()
+                        nbag[a] -= 1
+                        nbag[c] += 1
+                        npool = ''.join(sorted(nbag.elements()))
+                        if npool in amap: # There is at least one such word
+                            nlist.append(npool)
+                if nlist:
+                    nmap[pool] = sorted(nlist)
+            # Cache the map on disk
+            try:
+                write_wdict(nmap, filename, length)
+            except Exception:
+                pass
+        return nmap
 
     def __contains__(self, word):
         try:
