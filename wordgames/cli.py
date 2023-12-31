@@ -26,6 +26,13 @@ def main():
     m_anag.add_argument('word',
                         help='Word, maybe including wildcards')
     #
+    m_aladder = sub.add_parser('aladder',
+                               help='Find anagram ladder')
+    m_aladder.add_argument('-g','--gui', action='store_true',
+                           help='Display graphically')
+    m_aladder.add_argument('word1')
+    m_aladder.add_argument('word2')
+    #
     args = ap.parse_args()
     dictdir = os.path.join(os.path.expanduser('~/.local/share'),
                            args.dict)
@@ -46,6 +53,20 @@ def main():
     elif method == 'anag':
         for word in d2.anagram(args.word, length=args.length):
             print(word)
+    elif method == 'aladder':
+        from .puzzles import anagram_ladder_graph, print_graph
+        word1 = args.word1.upper()
+        word2 = args.word2.upper()
+        graph = anagram_ladder_graph(d2, word1, word2)
+        if args.gui:
+            from .gui import Tk, GraphView
+            graph.layout_centre()
+            root = Tk()
+            wgraph = GraphView(root, graph)
+            wgraph.pack()
+            root.mainloop()
+        else:
+            print_graph(graph)
     else:
         raise NotImplementedError(method)
 
