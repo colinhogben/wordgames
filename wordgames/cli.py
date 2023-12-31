@@ -5,6 +5,8 @@ import sys
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('-D','--dict', default='moby',
+                    help='Dictionary to use')
     sub = ap.add_subparsers(dest='method', metavar='method')
     #
     m_isword = sub.add_parser('is-word',
@@ -25,7 +27,8 @@ def main():
                         help='Word, maybe including wildcards')
     #
     args = ap.parse_args()
-    dictdir = os.path.expanduser('~/.local/share/moby')
+    dictdir = os.path.join(os.path.expanduser('~/.local/share'),
+                           args.dict)
     d2 = Dict(dictdir)
     method = args.method
     if method is None:          # PY3 bug
