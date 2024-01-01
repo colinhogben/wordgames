@@ -1,6 +1,25 @@
 from .alg import AStar, Graph
 from collections import Counter
 
+class WordAStar(AStar):
+    """Shortest-path finder for word ladders"""
+    def __init__(self, d2dict):
+        self.d2dict = d2dict
+
+    def distance_between(self, n1, n2):
+        return 1
+
+    def heuristic_cost_estimate(self, current, goal):
+        return len([True for c,g in zip(current, goal) if c != g])
+
+    def neighbors(self, node):
+        for i, c in enumerate(node):
+            for n in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                if n != c:
+                    word = node[:i] + n + node[i+1:]
+                    if word in self.d2dict:
+                        yield word
+
 class Bag(Counter):
     def string(self):
         return ''.join(sorted(self.elements()))
@@ -29,6 +48,19 @@ class AnagramAStar(AStar):
 
     def neighbors(self, node):
         return self.pool_neighbours.get(node, [])
+
+def word_ladder_graph(d2dict, word1, word2):
+    assert len(word1) == len(word2)
+    wlen = len(word1)
+    wa = WordAStar(d2dict)
+    graph_data = wa.astar(word2, word1, graph=True)
+    graph = Graph()
+    for level, word, links in graph_data:
+        graph.add_node(level, word, [word])
+    for level, word, links in graph_data:
+        for link in links:
+            graph.add_link(word, link)
+    return graph
 
 def anagram_ladder_graph(d2dict, word1, word2):
     assert len(word1) == len(word2)
