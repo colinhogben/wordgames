@@ -188,3 +188,97 @@ class AStar(ABC, Generic[T]):
 
         return None
 
+
+class Node:
+    def __init__(self, graph, name, items=None):
+        self.graph = graph
+        self.name = name
+        if items is None:
+            items = name.split('\n')
+        self.items = items
+        # Origin (top left), updated by layout
+        self.ox = 0
+        self.oy = 0
+        # Linke
+        self.prev = []
+        self.next = []
+        # Derived
+        self.length = len(self.items)
+        self.maxchars = max([len(item) for item in self.items])
+        self.width = self.maxchars * self.graph.charwidth + 2 * graph.padding
+        self.height = self.length * self.graph.charheight + 2 * graph.padding
+
+    @property
+    def midtop(self):
+        return (self.ox + self.width//2, self.oy)
+
+    @property
+    def midbot(self):
+        return (self.ox + self.width//2, self.oy + self.height)
+
+class Row:
+    def __init__(self, nodes):
+        self.nodes = list(nodes)
+
+    @property
+    def width(self):
+        rhs = self.nodes[-1]
+        return rhs.ox + rhs.width - self.nodes[0].ox
+
+    @property
+    def height(self):
+        return max([node.height for node in self.nodes])
+
+class Graph:
+    def __init__(self, charheight=17, charwidth=12, padding=2, hgap=10, vgap=10):
+        self.charheight = charheight
+        self.charwidth = charwidth
+        self.padding = padding
+        self.hgap = hgap
+        self.vgap = vgap
+        self.rows = []          # [Row...]
+        self.by_id = {}         # name -> node
+
+    @property
+    def width(self):
+        return max([row.width for row in self.rows]) + 2 * self.hgap
+
+    @property
+    def height(self):
+        last_row = self.rows[-1]
+        return last_row.nodes[0].oy + last_row.height + 2 * self.vgap
+
+    def add_node(self, rowindex, name, items=None):
+        while len(self.rows) <= rowindex:
+            self.rows.append(Row([]))
+        node = Node(self, name, items)
+        self.rows[rowindex].nodes.append(node)
+        self.by_id[name] = node
+        return node
+
+    def find_node(self, name):
+        return self.by_id[name]
+
+    def add_link(self, start, end):
+        startnode = self.find_node(start)
+        endnode = self.find_node(end)
+        startnode.next.append(endnode)
+        endnode.prev.append(startnode)
+
+    def layout_left(self):
+        oy = self.vgap
+        for row in self.rows:
+            ox = self.hgap
+            for node in row.nodes:
+                node.ox, node.oy = ox, oy
+                ox += node.width + self.hgap
+            oy += max([node.height for node in row.nodes]) + self.vgap
+
+    def layout_centre(self):
+        self.layout_left()
+        widths = [row.width for row in self.rows]
+        maxwidth = max(widths)
+        for row, width in zip(self.rows, widths):
+            shift = (maxwidth - width) // 2
+            for node in row.nodes:
+                node.ox += shift
