@@ -40,7 +40,14 @@ def anagram_ladder_graph(d2dict, word1, word2):
     graph = Graph()
     amap = d2dict.anagram_map(wlen)
     for level, pool, links in graph_data:
-        graph.add_node(level, pool, amap[pool])
+         # Known start and end
+        if pool == pool1:
+            words = [word1]
+        elif pool == pool2:
+            words = [word2]
+        else:
+            words = amap[pool]
+        graph.add_node(level, pool, words)
     for level, pool, links in graph_data:
         for link in links:
             graph.add_link(pool, link)
