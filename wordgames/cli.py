@@ -40,6 +40,10 @@ def main():
     m_aladder.add_argument('word1')
     m_aladder.add_argument('word2')
     #
+    m_anext = sub.add_parser('anext',
+                             help='Find anagram neighbours')
+    m_anext.add_argument('word')
+    #
     args = ap.parse_args()
     dictdir = os.path.join(os.path.expanduser('~/.local/share'),
                            args.dict)
@@ -88,6 +92,14 @@ def main():
             root.mainloop()
         else:
             print_graph(graph)
+    elif method == 'anext':
+        from .puzzles import Bag
+        word = args.word.upper()
+        pool = Bag(word).string()
+        wlen = len(word)
+        for pnext in d2.aneighbour_map(wlen).get(pool, []):
+            for wnext in d2.anagram_map(wlen)[pnext]:
+                print(wnext)
     else:
         raise NotImplementedError(method)
 
