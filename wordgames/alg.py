@@ -230,7 +230,7 @@ class Row:
         return max([node.height for node in self.nodes])
 
 class Graph:
-    def __init__(self, charheight=17, charwidth=12, padding=2, hgap=10, vgap=10):
+    def __init__(self, charheight=17, charwidth=12, padding=2, hgap=10, vgap=20):
         self.charheight = charheight
         self.charwidth = charwidth
         self.padding = padding
