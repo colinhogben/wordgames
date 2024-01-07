@@ -30,6 +30,8 @@ def main():
                               help='Find word ladder')
     m_ladder.add_argument('-g','--gui', action='store_true',
                            help='Display graphically')
+    m_ladder.add_argument('-x','--exclude', action='append', default=[],
+                          help='Word(s) to exclude')
     m_ladder.add_argument('word1')
     m_ladder.add_argument('word2')
     #
@@ -37,6 +39,8 @@ def main():
                                help='Find anagram ladder')
     m_aladder.add_argument('-g','--gui', action='store_true',
                            help='Display graphically')
+    m_aladder.add_argument('-x','--exclude', action='append', default=[],
+                           help='Word(s) to exclude')
     m_aladder.add_argument('word1')
     m_aladder.add_argument('word2')
     #
@@ -68,7 +72,8 @@ def main():
         from .puzzles import word_ladder_graph, print_graph
         word1 = args.word1.upper()
         word2 = args.word2.upper()
-        graph = word_ladder_graph(d2, word1, word2)
+        exclude = exclusions(args.exclude, len(word1))
+        graph = word_ladder_graph(d2, word1, word2, exclude=exclude)
         if args.gui:
             from .gui import Tk, GraphView
             graph.layout_centre()
@@ -82,7 +87,8 @@ def main():
         from .puzzles import anagram_ladder_graph, print_graph
         word1 = args.word1.upper()
         word2 = args.word2.upper()
-        graph = anagram_ladder_graph(d2, word1, word2)
+        exclude = anagram_exclusions(args.exclude, len(word1))
+        graph = anagram_ladder_graph(d2, word1, word2, exclude=exclude)
         if args.gui:
             from .gui import Tk, GraphView
             graph.layout_centre()
@@ -93,15 +99,35 @@ def main():
         else:
             print_graph(graph)
     elif method == 'anext':
-        from .puzzles import Bag
         word = args.word.upper()
-        pool = Bag(word).string()
+        pool = make_pool(word)
         wlen = len(word)
         for pnext in d2.aneighbour_map(wlen).get(pool, []):
             for wnext in d2.anagram_map(wlen)[pnext]:
                 print(wnext)
     else:
         raise NotImplementedError(method)
+
+def exclusions(wlists, wlen):
+    exclude = set()
+    for wlist in wlists:
+        for word in wlist.upper().split(','):
+            if len(word) != wlen:
+                raise ValueError('Word %s is not of length %d' % (word, wlen))
+            exclude.add(word)
+    return exclude
+
+def anagram_exclusions(wlists, wlen):
+    exclude = set()
+    for wlist in wlists:
+        for word in wlist.upper().split(','):
+            if len(word) != wlen:
+                raise ValueError('Word %s is not of length %d' % (word, wlen))
+            exclude.add(make_pool(word))
+    return exclude
+
+def make_pool(word):
+    return ''.join(sorted(word))
 
 if __name__=='__main__':
     main()

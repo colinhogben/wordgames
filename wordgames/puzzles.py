@@ -1,10 +1,13 @@
 from .alg import AStar, Graph
 from collections import Counter
 
+empty_set = set()
+
 class WordAStar(AStar):
     """Shortest-path finder for word ladders"""
-    def __init__(self, d2dict):
+    def __init__(self, d2dict, exclude=empty_set):
         self.d2dict = d2dict
+        self.exclude = exclude
 
     def distance_between(self, n1, n2):
         return 1
@@ -17,7 +20,7 @@ class WordAStar(AStar):
             for n in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                 if n != c:
                     word = node[:i] + n + node[i+1:]
-                    if word in self.d2dict:
+                    if word in self.d2dict and word not in self.exclude:
                         yield word
 
 class Bag(Counter):
@@ -36,9 +39,10 @@ class Bag(Counter):
         return sum
 
 class AnagramAStar(AStar):
-    def __init__(self, d2dict, wlen):
+    def __init__(self, d2dict, wlen, exclude=empty_set):
         # Get pool neighbours
         self.pool_neighbours = d2dict.aneighbour_map(wlen)
+        self.exclude = exclude
 
     def distance_between(self, n1, n2):
         return 1
@@ -47,12 +51,14 @@ class AnagramAStar(AStar):
         return Bag(current).distance(Bag(goal))
 
     def neighbors(self, node):
-        return self.pool_neighbours.get(node, [])
+        for pool in  self.pool_neighbours.get(node, []):
+            if pool not in self.exclude:
+                yield pool
 
-def word_ladder_graph(d2dict, word1, word2):
+def word_ladder_graph(d2dict, word1, word2, exclude=empty_set):
     assert len(word1) == len(word2)
     wlen = len(word1)
-    wa = WordAStar(d2dict)
+    wa = WordAStar(d2dict, exclude=exclude)
     graph_data = wa.astar(word2, word1, graph=True)
     graph = Graph()
     for level, word, links in graph_data:
@@ -62,12 +68,12 @@ def word_ladder_graph(d2dict, word1, word2):
             graph.add_link(word, link)
     return graph
 
-def anagram_ladder_graph(d2dict, word1, word2):
+def anagram_ladder_graph(d2dict, word1, word2, exclude=empty_set):
     assert len(word1) == len(word2)
     wlen = len(word1)
     pool1 = Bag(word1).string()
     pool2 = Bag(word2).string()
-    aa = AnagramAStar(d2dict, wlen)
+    aa = AnagramAStar(d2dict, wlen, exclude=exclude)
     graph_data = aa.astar(pool2, pool1, graph=True)
     graph = Graph()
     amap = d2dict.anagram_map(wlen)
