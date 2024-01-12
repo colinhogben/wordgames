@@ -208,6 +208,9 @@ class Node:
         self.width = self.maxchars * self.graph.charwidth + 2 * graph.padding
         self.height = self.length * self.graph.charheight + 2 * graph.padding
 
+    def __repr__(self):
+        return '<Node %s%s>' % (self.items[0], '...' if len(self.items) > 1 else '')
+
     @property
     def midtop(self):
         return (self.ox + self.width//2, self.oy)
