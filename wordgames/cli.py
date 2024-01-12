@@ -93,7 +93,15 @@ def main():
             from .gui import Tk, GraphView
             graph.layout_centre()
             root = Tk()
-            wgraph = GraphView(root, graph)
+
+            def remove_node(node):
+                """Exclude a node, recalculate and redraw"""
+                exclude.add(make_pool(node.name))
+                graph = anagram_ladder_graph(d2, word1, word2, exclude=exclude)
+                graph.layout_centre()
+                wgraph.set_graph(graph)
+
+            wgraph = GraphView(root, graph, on_click=remove_node)
             wgraph.pack()
             root.mainloop()
         else:
