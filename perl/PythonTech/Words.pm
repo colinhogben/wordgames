@@ -141,7 +141,7 @@ sub page {
     my $pattern = $self->{'query'}->param('pattern');
     my $length = $self->{'query'}->param('length');
     my $response = $self->{'query'}->response;
-    $response->write("<html>
+    $response->write("<html lang='en'>
 <head>
 <title>Wordgames: ",hq($title),"</title>
 <meta name='viewport' content='width=device-width, initial-scale=1' />
