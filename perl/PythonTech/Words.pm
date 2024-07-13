@@ -23,6 +23,8 @@ sub webquery {
     my($pattern) = $tpattern =~ /([\.\*A-Z]+)/i;
     my $tlength = $query->param('length');
     my($length) = $tlength =~ /(\d+)/;
+    my $tdictid = $query->param('dict');
+    my($dictid) = $tdictid =~ /(\w+)/;
     if (defined(my $trest = $query->param('rest'))) {
 	# RESTful version
 	if (my($rest) = $trest =~ /^(dmatch|anag|woxrd)$/) {
@@ -36,14 +38,16 @@ sub webquery {
 
 	if ($query->param('dmatch') ne '') {
 	    # dmatch does not take a length yet
-	    $self->webcmd('dmatch', [$pattern], \&hq);
+	    $self->webcmd('dmatch', [$pattern], \&hq, $dictid);
 	} elsif ($query->param('anagram') ne '') {
 	    $self->webcmd('anag', 
 			  $length ? [$pattern,$length] : [$pattern],
-			  \&hq);
+			  \&hq,
+			  $dictid);
 	} elsif ($query->param('target') ne '') {
 	    $self->webcmd('target', [$pattern],
-			  \&hq);
+			  \&hq,
+			  $dictid);
 	} elsif ($query->param('woxrd') ne '') {
 	    my $filter = sub {
 		my $word = shift;
@@ -55,7 +59,8 @@ sub webquery {
 	    };
 	    $self->webcmd('woxrd',
 			  $length ? [$pattern,$length] : [$pattern],
-			  $filter);
+			  $filter,
+			  $dictid);
 	} else {
 	    $self->fail("Unknown command");
 	}
@@ -63,8 +68,8 @@ sub webquery {
 }
 
 sub webcmd {
-    my($self, $cmd,$args,$filter) = @_;
-    my($error,@output) = $self->run_words($cmd,$args);
+    my($self, $cmd,$args,$filter,$dictid) = @_;
+    my($error,@output) = $self->run_words($cmd,$args,$dictid);
     if ($error ne '') {
 	$self->fail($error);
     } else {
@@ -92,11 +97,16 @@ sub restcmd {
 
 # Meat of the query
 sub run_words {
-    my($self, $cmd,$args) = @_;
-    my(@output,$error);
+    my($self, $cmd,$args,$dictid) = @_;
+    my($dict,@output,$error);
+
+    if (defined($dictid)) {
+	$dict = $self->{dictmap}->{$dictid};
+    }
+    $dict ||= $self->{'dict'};
 
     $ENV{'PATH'} = "/bin:/usr/bin";
-    $ENV{'D2DICT'} = $self->{'dict'};
+    $ENV{'D2DICT'} = $dict;
 
     my $errfile = "/tmp/err.$$";
     if (open(CMD,'-|')) {
@@ -140,6 +150,7 @@ sub page {
     my $hurl = hq($self->{'query'}->url(-path => 1));
     my $pattern = $self->{'query'}->param('pattern');
     my $length = $self->{'query'}->param('length');
+    my $dictid = $self->{'query'}->param('dict');
     my $response = $self->{'query'}->response;
     $response->write("<html lang='en'>
 <head>
@@ -173,7 +184,24 @@ function sf() { document.f.pattern.focus(); }
       <input type=submit name='target' value='Target'>
       <input type=submit name='woxrd' value='Wo(X)rd'>
     </td>
-</tr>
+</tr>");
+    if (my $map = $self->{dictmap}) {
+	$response->write("
+<tr>
+  <th>Dictionary</th>
+    <td>");
+	foreach my $id (keys %$map) {
+	    $response->write("
+      <label for='dict_$id'>$id</label>
+        <input type='radio' id='dict_$id' name='dict' value='$id'".
+			     ($dictid eq $id ? " checked" : "").
+			     ">");
+	}
+	$response->write("
+    </td>
+</tr>");
+    }
+    $response->write("
 </table>
 </form>
 </body>
