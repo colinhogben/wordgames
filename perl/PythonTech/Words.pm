@@ -11,6 +11,7 @@ sub new {
     foreach ('dict','bindir') {
 	die "$class: $_ not configured" unless defined $self->{$_};
     }
+    $self->{'extdict'} ||= 'https://www.thefreedictionary.com/%s';
     bless $self, $class;
     return $self;
 }
@@ -70,7 +71,7 @@ sub webcmd {
 #	die "filter=$filter\n";
 	$self->page(join(' ',$cmd,@$args),
 		    '<pre>' .
-		    join("\n", map {&answers($_, $filter->($_))} @output) .
+		    join("\n", map {$self->extlink($_, $filter->($_))} @output) .
 		    '</pre>');
     }
 }
@@ -181,11 +182,13 @@ function sf() { document.f.pattern.focus(); }
 }
 
 #-----------------------------------------------------------------------
-#	Hyperlink some HTML to a word's definition at answers.com
+#	Hyperlink some HTML to a word's definition at an external
+#	dictionary website
 #-----------------------------------------------------------------------
-sub answers {
-    my($word,$html) = @_;
-    return "<a href=\"http://www.answers.com/" . lc($word) . "\">$html</a>";
+sub extlink {
+    my($self, $word,$html) = @_;
+    (my $url = $self->{'extdict'}) =~ s/%s/lc($word)/eg;
+    return "<a href=\"".hq($url)."\">$html</a>";
 }
 
 1;
