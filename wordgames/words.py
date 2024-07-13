@@ -4,6 +4,7 @@
 import os
 import re
 import subprocess
+import sys
 
 class Words(object):
     def __init__(self, d2dict, bindir):
@@ -23,8 +24,10 @@ class Words(object):
         # print('d2dict=%s bindir=%s pattern=%r' %
         #       (self.d2dict, self.bindir, pattern))
         cmd = [os.path.join(self.bindir,exe), pattern]
+        opts = {'encoding':'ascii'} if sys.version_info >= (3,6) else {}
         p = subprocess.Popen(cmd, env={'D2DICT': self.d2dict},
-                             stdout=subprocess.PIPE)
+                             stdout=subprocess.PIPE,
+                             **opts)
         for line in p.stdout:
             yield line.rstrip()
         p.wait()
